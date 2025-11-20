@@ -1,6 +1,8 @@
 #include "console.h"
 #include <iostream>
 
+Console::Console() : hConsole(GetStdHandle(STD_OUTPUT_HANDLE)) {}
+
 Console::~Console() {
     fclose(stdout);
     FreeConsole();
@@ -14,8 +16,11 @@ void Console::Init() {
 
     std::cout.clear();
     
-   /* HWND hwnd = GetConsoleWindow();
-    ShowWindow(hwnd, SW_HIDE);*/
+    hwnd = GetConsoleWindow();
+}
+
+void Console::Show(bool show) {
+    ShowWindow(hwnd, show ? SW_SHOW : SW_HIDE);
 }
 
 void Console::Print(const char* format, ...) {

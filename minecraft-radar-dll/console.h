@@ -7,13 +7,14 @@
 class Console {
 private:
     HANDLE hConsole = nullptr;
+    HWND hwnd = nullptr;
 
 public:
-    Console() : hConsole(GetStdHandle(STD_OUTPUT_HANDLE)) {}
+    Console();
     ~Console();
     
     void Init();
-
+    void Show(bool show);
     void Print(const char* format, ...);
 };
 

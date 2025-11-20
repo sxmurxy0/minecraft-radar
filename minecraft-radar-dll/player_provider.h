@@ -27,12 +27,11 @@ static const std::string
 
 class PlayerProvider {
 private:
-	jclass minecraftClass = nullptr;
+	static jclass minecraftClass;
 	jobject minecraftObject = nullptr;
 
 public:
 	void Init();
-
 	jobject GetLocalPlayerObject();
 	jobject GetPlayerListObject();
 	std::pair<jdouble, jdouble> GetEntityPosition(jobject entity);

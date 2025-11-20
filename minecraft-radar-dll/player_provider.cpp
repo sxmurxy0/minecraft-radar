@@ -1,11 +1,13 @@
-#include "entity_provider.h"
+#include "player_provider.h"
 
 extern JNIEnv* g_JniEnv;
+
+jclass PlayerProvider::minecraftClass = nullptr;
 
 void PlayerProvider::Init() {
     minecraftClass = g_JniEnv->FindClass(MINECRAFT_CLASS.c_str());
 
-    jfieldID instanceFieldID = g_JniEnv->GetStaticFieldID(
+    static jfieldID instanceFieldID = g_JniEnv->GetStaticFieldID(
         minecraftClass,
         MINECRAFT_INSTANCE_FIELD.c_str(),
         MINECRAFT_INSTANCE_FIELD_S.c_str()
@@ -14,7 +16,7 @@ void PlayerProvider::Init() {
 }
 
 jobject PlayerProvider::GetLocalPlayerObject() {
-    jfieldID playerFieldID = g_JniEnv->GetFieldID(
+    static jfieldID playerFieldID = g_JniEnv->GetFieldID(
         minecraftClass,
         MINECRAFT_PLAYER_FIELD.c_str(),
         MINECRAFT_PLAYER_FIELD_S.c_str()
@@ -24,7 +26,7 @@ jobject PlayerProvider::GetLocalPlayerObject() {
 }
 
 jobject PlayerProvider::GetPlayerListObject() {
-    jfieldID levelFieldID = g_JniEnv->GetFieldID(
+    static jfieldID levelFieldID = g_JniEnv->GetFieldID(
         minecraftClass,
         MINECRAFT_LEVEL_FIELD.c_str(),
         MINECRAFT_LEVEL_FIELD_S.c_str()
@@ -36,9 +38,9 @@ jobject PlayerProvider::GetPlayerListObject() {
         return nullptr;
     }
 
-    jclass worldClass = g_JniEnv->GetObjectClass(levelObject);
-    jfieldID playersFieldID = g_JniEnv->GetFieldID(
-        worldClass,
+    static jclass levelClass = g_JniEnv->FindClass(CLIENTLEVEL_CLASS.c_str());
+    static jfieldID playersFieldID = g_JniEnv->GetFieldID(
+        levelClass,
         CLIENTLEVEL_PLAYERS_FIELD.c_str(),
         CLIENTLEVEL_PLAYERS_FIELD_S.c_str()
     );
@@ -62,5 +64,5 @@ std::pair<jdouble, jdouble> PlayerProvider::GetEntityPosition(jobject entity) {
     jdouble x = g_JniEnv->GetDoubleField(entity, xEntityFieldID);
     jdouble z = g_JniEnv->GetDoubleField(entity, zEntityFieldID);
 
-    return std::make_pair(x, z);
+    return {x, z};
 }

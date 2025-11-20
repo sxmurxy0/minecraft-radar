@@ -21,10 +21,13 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="entity_provider.cpp">
+    <ClCompile Include="player_provider.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="list_wrapper.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="radar_window.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,10 +35,13 @@
     <ClInclude Include="console.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="entity_provider.h">
+    <ClInclude Include="player_provider.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="list_wrapper.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="radar_window.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

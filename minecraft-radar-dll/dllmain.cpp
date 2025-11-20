@@ -1,33 +1,34 @@
 ﻿#include <windows.h>
 #include <jni.h>
 #include "console.h"
-#include "entity_provider.h"
+#include "player_provider.h"
 #include "list_wrapper.h"
+#include "radar_window.h"
 
 JavaVM* g_JavaVM = nullptr;
 JNIEnv* g_JniEnv = nullptr;
 
 Console g_Console;
 PlayerProvider g_PlayerProvider;
+RadarWindow g_RadarWindow;
 
 bool SetupJNIEnv() {
     jsize vmCount;
     if (JNI_GetCreatedJavaVMs(&g_JavaVM, 1, &vmCount) != JNI_OK || vmCount == 0) {
-        return FALSE;
+        return false;
     }
 
     if (g_JavaVM->AttachCurrentThread((void**)&g_JniEnv, nullptr) != JNI_OK) {
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 DWORD WINAPI DllThreadProc(HMODULE hModule) {
     if (!SetupJNIEnv()) {
         MessageBox(0, L"Failed to attach DLL!", L"Error", MB_ICONERROR);
         FreeLibraryAndExitThread(hModule, 0);
-
         return 0;
     }
 
@@ -35,34 +36,42 @@ DWORD WINAPI DllThreadProc(HMODULE hModule) {
 
     g_Console.Init();
     g_PlayerProvider.Init();
+    g_RadarWindow.Init();
+
+    g_Console.Show(false);
 
     while (!(GetAsyncKeyState(VK_DELETE) & 1)) {
-        jobject player = g_PlayerProvider.GetLocalPlayerObject();
-        if (player) {
-            auto localPos = g_PlayerProvider.GetEntityPosition(player);
-            std::string posString = "Self: " + std::to_string(localPos.first) + 
-                   + " " + std::to_string(localPos.second);
-            g_Console.Print(posString.c_str());
-            
-            jobject playersList = g_PlayerProvider.GetPlayerListObject();
-            ListWrapper list(playersList);
-            for (int i = 0; i < list.GetSize(); i++) {
-                jobject entity = list.GetElement(i);
-                auto pos = g_PlayerProvider.GetEntityPosition(entity);
-                double dx = pos.first - localPos.first, dy = pos.second - localPos.second;
-                double distance = sqrt(dx * dx + dy * dy);
-                posString = "Entity" + std::to_string(i) + ": " + std::to_string(pos.first) +
-                    + " " + std::to_string(pos.second) + " | Distance: " + std::to_string(distance);
-                g_Console.Print(posString.c_str());
+        g_RadarWindow.Clear();
+
+        jobject localPlayerObject = g_PlayerProvider.GetLocalPlayerObject();
+        jobject playerListObject = g_PlayerProvider.GetPlayerListObject();
+
+        if (localPlayerObject && playerListObject) {
+            auto localPos = g_PlayerProvider.GetEntityPosition(localPlayerObject);
+
+            ListWrapper playerList(playerListObject);
+            for (int i = 0; i < playerList.Size(); i++) {
+                jobject playerObject = playerList.Get(i);
+                if (playerObject && playerObject != localPlayerObject) {
+                    auto pos = g_PlayerProvider.GetEntityPosition(playerObject);
+
+                    double dx = pos.first - localPos.first;
+                    double dy = pos.second - localPos.second;
+
+                    int radarX = static_cast<int>(dx * 2);
+                    int radarY = static_cast<int>(dy * 2);
+
+                    g_RadarWindow.AddPlayer(radarX, radarY);
+                }
             }
         }
 
-        Sleep(1000);
+        Sleep(60);
     }
 
+    g_RadarWindow.Close();
     g_JavaVM->DetachCurrentThread();
 
-    MessageBox(0, L"DLL unloaded!", L"Info", MB_ICONINFORMATION);
     FreeLibraryAndExitThread(hModule, 0);
 
     return 0;
@@ -70,6 +79,7 @@ DWORD WINAPI DllThreadProc(HMODULE hModule) {
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved) {
     if (reason == DLL_PROCESS_ATTACH) {
+        DisableThreadLibraryCalls(hModule);
         HANDLE tHandle = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)DllThreadProc, hModule, 0, nullptr);
         if (tHandle) {
             CloseHandle(tHandle);

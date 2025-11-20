@@ -10,7 +10,7 @@ private:
 public:
 	ListWrapper(jobject listObject);
 
-	jobject GetElement(int index);
+	jobject Get(int index);
 
-	int GetSize() { return size; }
+	int Size() { return size; }
 };
